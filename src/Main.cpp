@@ -18,7 +18,7 @@ int main()
 		"tembak",
 		"turun"
 	};
-	auto model = fdeep::load_model("C:\\Users\\andra\\Projects\\Helicopter Commander\\Helicopter Commander\\model.json");
+	auto model = fdeep::load_model("C:\\model.json");
 	PaError err = paNoError;
 	err = Pa_Initialize();
 	if (err != paNoError)
@@ -54,6 +54,8 @@ int main()
 		Recording record(1);
 		SAMPLE_TYPE* samples = record.record();
 		size_t total_samples = record.get_total_samples();
+
+		record.play_previous_record();
 
 		fdeep::tensor tensor_output(fdeep::tensor_shape(total_samples, 1), std::vector<float>(samples, samples + total_samples));
 		auto prediction_result = model.predict({ tensor_output });

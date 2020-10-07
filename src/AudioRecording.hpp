@@ -1,6 +1,8 @@
 #ifndef _H_AUDIO_RECORDING
 #define _H_AUDIO_RECORDING
 
+#include <portaudio.h>
+
 #define PA_SAMPLE_TYPE paFloat32
 #define SAMPLE_SILENCE 0.0f
 #define SAMPLE_TYPE float
@@ -26,12 +28,18 @@ private:
 	int total_samples;
 	int total_bytes;
 
+	PaStreamParameters input_param;
+	PaStreamParameters output_param;
+	PaError err;
+	PaStream* stream;
+
 public:
 	Recording(int total_seconds, int sample_rate = 8000);
 	~Recording();
 
 	size_t get_total_samples();
 
+	void play_previous_record();
 	SAMPLE_TYPE* record();
 };
 
