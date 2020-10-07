@@ -1,0 +1,18 @@
+{
+ "options": [
+  [
+   "functionalplus:build_unittest",
+   "False"
+  ],
+  [
+   "portaudio:shared",
+   "False"
+  ]
+ ],
+ "root": {
+  "name": null,
+  "version": null,
+  "user": null,
+  "channel": null
+ }
+}

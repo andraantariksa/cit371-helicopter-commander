@@ -1,0 +1,41 @@
+[settings]
+    arch=x86_64
+    build_type=Release
+    compiler=Visual Studio
+    compiler.runtime=MD
+    compiler.version=16
+    os=Windows
+
+[requires]
+    frugally-deep/v0.15.1-p0
+    portaudio/v190600.20161030
+
+[options]
+
+
+[full_settings]
+    arch=x86_64
+    arch_build=x86_64
+    build_type=Release
+    compiler=Visual Studio
+    compiler.runtime=MD
+    compiler.version=16
+    os=Windows
+    os_build=Windows
+
+[full_requires]
+    eigen/3.3.7@conan/stable:5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9
+    frugally-deep/v0.15.1-p0@dobiasd/stable:d708490469ba0aa4991e184d08b4dc82564416ea
+    functionalplus/v0.2.9-p0@dobiasd/stable:5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9
+    jsonformoderncpp/3.1.0@vthiery/stable:5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9
+    portaudio/v190600.20161030@bincrafters/stable:3fb49604f9c2f729b85ba3115852006824e72cab
+
+[full_options]
+    functionalplus:build_unittest=False
+    portaudio:shared=False
+
+[recipe_hash]
+
+
+[env]
+

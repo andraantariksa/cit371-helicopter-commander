@@ -1,0 +1,58 @@
+{
+ "graph_lock": {
+  "nodes": {
+   "0": {
+    "options": "functionalplus:build_unittest=False\nportaudio:shared=False",
+    "requires": [
+     "1",
+     "5"
+    ],
+    "path": "..\\..\\..\\conanfile.txt",
+    "context": "host"
+   },
+   "1": {
+    "ref": "frugally-deep/v0.15.1-p0@dobiasd/stable",
+    "options": "functionalplus:build_unittest=False",
+    "package_id": "d708490469ba0aa4991e184d08b4dc82564416ea",
+    "prev": "0",
+    "requires": [
+     "2",
+     "3",
+     "4"
+    ],
+    "context": "host"
+   },
+   "2": {
+    "ref": "eigen/3.3.7@conan/stable",
+    "options": "",
+    "package_id": "5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9",
+    "prev": "0",
+    "context": "host"
+   },
+   "3": {
+    "ref": "functionalplus/v0.2.9-p0@dobiasd/stable",
+    "options": "build_unittest=False",
+    "package_id": "5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9",
+    "prev": "0",
+    "context": "host"
+   },
+   "4": {
+    "ref": "jsonformoderncpp/3.1.0@vthiery/stable",
+    "options": "",
+    "package_id": "5ab84d6acfe1f23c4fae0ab88f26e3a396351ac9",
+    "prev": "0",
+    "context": "host"
+   },
+   "5": {
+    "ref": "portaudio/v190600.20161030@bincrafters/stable",
+    "options": "shared=False",
+    "package_id": "3fb49604f9c2f729b85ba3115852006824e72cab",
+    "prev": "0",
+    "context": "host"
+   }
+  },
+  "revisions_enabled": false
+ },
+ "version": "0.4",
+ "profile_host": "[settings]\narch=x86_64\narch_build=x86_64\nbuild_type=Release\ncompiler=Visual Studio\ncompiler.runtime=MD\ncompiler.version=16\nos=Windows\nos_build=Windows\n[options]\n[build_requires]\n[env]\n"
+}
