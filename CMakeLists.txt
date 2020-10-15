@@ -8,7 +8,12 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
 add_executable (HelicopterCommander
-	"src/Main.cpp"
-	"src/AudioRecording.cpp")
-target_link_libraries(HelicopterCommander ${CONAN_LIBS})
+	"Source/Main.cpp"
+	"Source/AudioRecording.cpp")
+target_link_libraries(HelicopterCommander
+	${CONAN_LIBS}
+	"${CMAKE_SOURCE_DIR}/Lib/rnnoise.lib"
+	)
 
+target_include_directories(HelicopterCommander PRIVATE
+	"${CMAKE_SOURCE_DIR}/Lib/rnnoise/include")
