@@ -1,47 +1,21 @@
-﻿#include <fdeep/model.hpp> // Start this before anything else!
+﻿#include <fdeep/model.hpp>
+#include <portaudio.h>
+#include <rnnoise.h>
+
 #include <Windows.h>
 #include <iostream>
 #include <vector>
-#include <portaudio.h>
-#include <rnnoise.h>
 #include <set>
 #include <thread>
 #include <psapi.h>
+#include <array>
 
 #include "AudioRecording.hpp"
 
-void loop(std::set<short>* instruction)
+class Core
 {
-	INPUT ip;
-	ip.type = INPUT_KEYBOARD;
-	ip.ki.wScan = 0; // hardware scan code for key
-	ip.ki.time = 0;
-	ip.ki.dwExtraInfo = 0;
-	ip.ki.dwFlags = 0;
-
-	char name[200];
-
-	while (true)
-	{
-		HWND hwnd = GetForegroundWindow();
-		GetWindowTextA(hwnd, name, 200);
-		
-		if (strcmp(name, "GTA: San Andreas") == 0) {
-			for (short key: *instruction)
-			{
-				std::cout << "Instruction " << key << "\n";
-				ip.ki.wVk = key;
-				SendInput(1, &ip, sizeof(INPUT));
-			}
-
-			Sleep(200);
-		}
-	}
-}
-
-int main()
-{
-	std::vector<std::string> labels = {
+private:
+	const std::array<char[7], 8> labels = {
 		"kanan",
 		"kiri",
 		"maju",
@@ -51,28 +25,25 @@ int main()
 		"tembak",
 		"turun"
 	};
-	auto model = fdeep::load_model("C:\\model.json");
+	fdeep::model model;
+	std::set<short>* instruction;
+	DenoiseState* st;
 
-	std::set<short> instruction;
-	std::thread t(loop, &instruction);
-
-	PaError err = paNoError;
-	err = Pa_Initialize();
-	if (err != paNoError)
+public:
+	Core(std::set<short>* instruction):
+		model(fdeep::load_model("C:\\model.json")),
+		instruction(instruction)
 	{
-		std::cout << "PortAudio error: " << Pa_GetErrorText(err) << '\n';
-		abort();
+		st = rnnoise_create(nullptr);
 	}
 
-	DenoiseState* st = rnnoise_create(nullptr);
-
-	while (true)
+	~Core()
 	{
-		std::cout << "Next\n";
-		std::cin.get();
+		rnnoise_destroy(st);
+	}
 
-		std::cout << "Record" << std::endl;
-
+	void recordAndPredict()
+	{
 		Recording record(1);
 		SAMPLE_TYPE* samples = record.record();
 		size_t total_samples = record.get_total_samples();
@@ -103,22 +74,96 @@ int main()
 
 		if (i_max == 4)
 		{
-			instruction.insert(0x57);
+			instruction->insert(0x57);
 			std::cout << "Added instruction, naik\n";
 		}
 		else if (i_max == 5)
 		{
-			instruction.clear();
+			instruction->clear();
 			std::cout << "Clearing instruction\n";
 		}
 		else if (i_max == 7)
 		{
-			instruction.insert(0x53);
+			instruction->insert(0x53);
 			std::cout << "Added instruction, turun\n";
 		}
 	}
+};
 
-	rnnoise_destroy(st);
+void loop(std::set<short>& instruction)
+{
+	INPUT ip;
+	ip.type = INPUT_KEYBOARD;
+	ip.ki.wScan = 0; // hardware scan code for key
+	ip.ki.time = 0;
+	ip.ki.dwExtraInfo = 0;
+	ip.ki.dwFlags = 0;
+
+	char name[50];
+
+	while (true)
+	{
+		HWND hwnd = GetForegroundWindow();
+		GetWindowTextA(hwnd, name, 50);
+
+		if (strcmp(name, "GTA: San Andreas") == 0) {
+			for (short key : instruction)
+			{
+				ip.ki.wVk = key;
+				SendInput(1, &ip, sizeof(INPUT));
+			}
+
+			Sleep(200);
+		}
+	}
+}
+
+std::set<short> instruction;
+std::thread t(loop, instruction);
+Core core(&instruction);
+
+LRESULT CALLBACK lowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	BOOL fEatKeystroke = FALSE;
+
+	if (nCode == HC_ACTION)
+	{
+		switch (wParam)
+		{
+		case WM_KEYDOWN:
+		case WM_SYSKEYDOWN:
+			PKBDLLHOOKSTRUCT p = (PKBDLLHOOKSTRUCT)lParam;
+			if (fEatKeystroke = (p->vkCode == 0x73))
+			{
+				core.recordAndPredict();
+			}
+			break;
+		}
+	}
+	return fEatKeystroke ? 1 : CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+int main()
+{
+	PaError err = paNoError;
+	err = Pa_Initialize();
+	if (err != paNoError)
+	{
+		std::cout << "PortAudio error: " << Pa_GetErrorText(err) << '\n';
+		abort();
+	}
+
+	// Bind the global Windows keyboard hook
+	HHOOK lowLevelKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, lowLevelKeyboardProc, 0, 0);
+
+	MSG msg;
+	while (GetMessage(&msg, NULL, NULL, NULL))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	UnhookWindowsHookEx(lowLevelKeyboardHook);
 
 	Pa_Terminate();
 

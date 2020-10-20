@@ -1,6 +1,0 @@
-[requires]
-frugally-deep/v0.15.1-p0@dobiasd/stable
-portaudio/v190600.20161030@bincrafters/stable
-
-[generators]
-cmake

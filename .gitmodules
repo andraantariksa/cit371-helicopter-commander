@@ -1,3 +1,15 @@
 [submodule "Lib/rnnoise"]
 	path = Lib/rnnoise
 	url = https://github.com/xiph/rnnoise.git
+[submodule "Lib/portaudio"]
+	path = Lib/portaudio
+	url = https://github.com/PortAudio/portaudio.git
+[submodule "Lib/frugally-deep"]
+	path = Lib/frugally-deep
+	url = https://github.com/Dobiasd/frugally-deep.git
+[submodule "Lib/FunctionalPlus"]
+	path = Lib/FunctionalPlus
+	url = https://github.com/Dobiasd/FunctionalPlus.git
+[submodule "Lib/eigen"]
+	path = Lib/eigen
+	url = https://gitlab.com/libeigen/eigen.git
