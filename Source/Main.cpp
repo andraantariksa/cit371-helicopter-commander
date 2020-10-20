@@ -30,7 +30,7 @@ private:
 	DenoiseState* st;
 
 public:
-	Core(std::set<short>* instruction):
+	Core(std::set<short>* instruction) :
 		model(fdeep::load_model("C:\\model.json")),
 		instruction(instruction)
 	{
@@ -72,25 +72,64 @@ public:
 
 		std::cout << i_max << " (" << labels[i_max] << ") with val " << val_max << '\n';
 
-		if (i_max == 4)
+		switch (i_max)
+		{
+		//
+		case 0:
+		{
+			instruction->insert(0x44);
+			std::cout << "Added instruction, kanan\n";
+			break;
+		}
+		case 1:
+		{
+			instruction->insert(0x41);
+			std::cout << "Added instruction, kiri\n";
+			break;
+		}
+		case 2:
+		{
+			instruction->insert(0x57);
+			std::cout << "Added instruction, maju\n";
+			break;
+		}
+		case 3:
+		{
+			instruction->insert(0x53);
+			std::cout << "Added instruction, mundur\n";
+			break;
+		}
+		case 6:
+		{
+			// T
+			instruction->insert(0x54);
+			std::cout << "Added instruction, tembak\n";
+			break;
+		}
+		//
+		case 4:
 		{
 			instruction->insert(0x57);
 			std::cout << "Added instruction, naik\n";
+			break;
 		}
-		else if (i_max == 5)
+		case 5:
 		{
 			instruction->clear();
 			std::cout << "Clearing instruction\n";
+			break;
 		}
-		else if (i_max == 7)
+		case 7:
 		{
 			instruction->insert(0x53);
 			std::cout << "Added instruction, turun\n";
+			break;
+		}
 		}
 	}
 };
 
-void loop(std::set<short>& instruction)
+void loop(std::set<short>* instruction)
 {
 	INPUT ip;
 	ip.type = INPUT_KEYBOARD;
@@ -106,8 +145,9 @@ void loop(std::set<short>& instruction)
 		HWND hwnd = GetForegroundWindow();
 		GetWindowTextA(hwnd, name, 50);
 
-		if (strcmp(name, "GTA: San Andreas") == 0) {
-			for (short key : instruction)
+		if (strcmp(name, "GTA: San Andreas") == 0)
+		{
+			for (short key : *instruction)
 			{
 				ip.ki.wVk = key;
 				SendInput(1, &ip, sizeof(INPUT));
@@ -119,7 +159,7 @@ void loop(std::set<short>& instruction)
 }
 
 std::set<short> instruction;
-std::thread t(loop, instruction);
+std::thread t(loop, &instruction);
 Core core(&instruction);
 
 LRESULT CALLBACK lowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
