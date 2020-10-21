@@ -13,6 +13,8 @@
 
 #include "AudioRecording.hpp"
 
+// http://www.philipstorr.id.au/pcbook/book3/scancode.htm
+
 // Unsafe threading
 bool clear = false;
 
@@ -76,45 +78,44 @@ public:
 
 		std::cout << i_max << " (" << labels[i_max] << ") with val " << val_max << '\n';
 
-
 		switch (i_max)
 		{
 			//
 		case 0:
 		{
-			instruction->insert(0x45);
+			instruction->insert(0x12);
 			std::cout << "Added instruction, kanan\n";
 			break;
 		}
 		case 1:
 		{
-			instruction->insert(0x51);
+			instruction->insert(0x10);
 			std::cout << "Added instruction, kiri\n";
 			break;
 		}
 		case 2:
 		{
-			instruction->insert(0x4F);
+			instruction->insert(0x18);
 			std::cout << "Added instruction, maju\n";
 			break;
 		}
 		case 3:
 		{
-			instruction->insert(0x4C);
+			instruction->insert(0x26);
 			std::cout << "Added instruction, mundur\n";
 			break;
 		}
 		case 6:
 		{
 			// T
-			instruction->insert(0x54);
+			instruction->insert(0x14);
 			std::cout << "Added instruction, tembak\n";
 			break;
 		}
 		//
 		case 4:
 		{
-			instruction->insert(0x57);
+			instruction->insert(0x11);
 			std::cout << "Added instruction, naik\n";
 			break;
 		}
@@ -127,7 +128,7 @@ public:
 		}
 		case 7:
 		{
-			instruction->insert(0x53);
+			instruction->insert(0x1F);
 			std::cout << "Added instruction, turun\n";
 			break;
 		}
@@ -140,10 +141,12 @@ void loop(std::set<short>* instruction)
 	INPUT ip;
 	ZeroMemory(&ip, sizeof(INPUT));
 	ip.type = INPUT_KEYBOARD;
-	ip.ki.wScan = 0; // hardware scan code for key
+	ip.ki.wVk = 0; // hardware scan code for key
 	ip.ki.time = 0;
 	ip.ki.dwExtraInfo = 0;
-	ip.ki.dwFlags = 0;
+	ip.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+	unsigned int i = 0;
 
 	char name[50];
 
@@ -157,34 +160,43 @@ void loop(std::set<short>* instruction)
 			// Unsafe threading
 			if (clear)
 			{
-				instruction->clear();
-				clear = false;
+				ip.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
 
 				// Release key
 				for (short key : *instruction)
 				{
-					// Press
-					ip.ki.wVk = key;
-					ip.ki.dwFlags = 0;
-					SendInput(1, &ip, sizeof(INPUT));
-
 					// Release
-					ip.ki.wVk = key;
-					ip.ki.dwFlags = KEYEVENTF_KEYUP;
+					ip.ki.wScan = key;
 					SendInput(1, &ip, sizeof(INPUT));
 				}
 
-				ip.ki.dwFlags = 0;
-			}
+				ip.ki.dwFlags = KEYEVENTF_SCANCODE;
 
+				instruction->clear();
+				clear = false;
+			}
+			;
 			for (short key : *instruction)
 			{
+				if (i % 6 < 3 && (key == 0x18 || key == 0x26))
+				{
+					ip.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
+
+					// Release
+					ip.ki.wScan = key;
+					SendInput(1, &ip, sizeof(INPUT));
+					ip.ki.dwFlags = KEYEVENTF_SCANCODE;
+
+					continue;
+				}
+
 				// Keypress
-				ip.ki.wVk = key;
+				ip.ki.wScan = key;
 				SendInput(1, &ip, sizeof(INPUT));
 			}
 
-			Sleep(300);
+			Sleep(200);
+			i++;
 		}
 	}
 }
