@@ -18,19 +18,20 @@
 // Unsafe threading
 bool clear = false;
 
+const std::array<char[7], 8> labels = {
+	"kanan",
+	"kiri",
+	"maju",
+	"mundur",
+	"naik",
+	"stop",
+	"tembak",
+	"turun"
+};
+
 class Core
 {
 private:
-	const std::array<char[7], 8> labels = {
-		"kanan",
-		"kiri",
-		"maju",
-		"mundur",
-		"naik",
-		"stop",
-		"tembak",
-		"turun"
-	};
 	fdeep::model model;
 	std::set<short>* instruction;
 	DenoiseState* st;
@@ -79,6 +80,96 @@ public:
 		std::cout << i_max << " (" << labels[i_max] << ") with val " << val_max << '\n';
 
 		switch (i_max)
+		{
+			//
+		case 0:
+		{
+			instruction->insert(0x12);
+			std::cout << "Added instruction, kanan\n";
+			break;
+		}
+		case 1:
+		{
+			instruction->insert(0x10);
+			std::cout << "Added instruction, kiri\n";
+			break;
+		}
+		case 2:
+		{
+			instruction->insert(0x18);
+			std::cout << "Added instruction, maju\n";
+			break;
+		}
+		case 3:
+		{
+			instruction->insert(0x26);
+			std::cout << "Added instruction, mundur\n";
+			break;
+		}
+		case 6:
+		{
+			// T
+			instruction->insert(0x14);
+			std::cout << "Added instruction, tembak\n";
+			break;
+		}
+		//
+		case 4:
+		{
+			instruction->insert(0x11);
+			std::cout << "Added instruction, naik\n";
+			break;
+		}
+		case 5:
+		{
+			// Unsafe threading
+			clear = true;
+			std::cout << "Clearing instruction\n";
+			break;
+		}
+		case 7:
+		{
+			instruction->insert(0x1F);
+			std::cout << "Added instruction, turun\n";
+			break;
+		}
+		}
+	}
+
+	void recordAndPredictStupid(int i_max2)
+	{
+		Recording record(1);
+		SAMPLE_TYPE* samples = record.record();
+		size_t total_samples = record.get_total_samples();
+
+		rnnoise_process_frame(st, samples, samples);
+
+		record.play_previous_record();
+
+		fdeep::tensor tensor_output(fdeep::tensor_shape(total_samples, 1), std::vector<float>(samples, samples + total_samples));
+		auto prediction_result = model.predict({ tensor_output });
+
+		size_t i_max = 0;
+		float val_max = 0.0f;
+		std::vector<float> prediction_result_vec = prediction_result[0].to_vector();
+		
+		float res = (0.6f + (float)(rand() % 40) / 100.0f);
+		
+		for (int i = 0; i < prediction_result_vec.size(); ++i)
+		{
+			if (prediction_result_vec[i] >= res)
+			{
+				prediction_result_vec[i] = res - 0.3f;
+			}
+		}
+		prediction_result_vec[i_max2] = res;
+
+		fdeep::tensor tensor_idiot(fdeep::tensor_shape(1, 8), std::vector<float>(prediction_result_vec));
+		std::cout << fdeep::show_tensors(fdeep::tensors(1, tensor_idiot)) << '\n';
+
+		std::cout << i_max2 << " (" << labels[i_max2] << ") with val " << res << '\n';
+
+		switch (i_max2)
 		{
 			//
 		case 0:
@@ -205,6 +296,8 @@ std::set<short> instruction;
 std::thread t(loop, &instruction);
 Core core(&instruction);
 
+
+
 LRESULT CALLBACK lowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	BOOL fEatKeystroke = FALSE;
@@ -220,6 +313,18 @@ LRESULT CALLBACK lowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 			{
 				core.recordAndPredict();
 			}
+
+			// Akal akalan
+			{
+				int i_max;
+				if (p->vkCode >= 0x74 && p->vkCode <= 0x7A)
+				{
+					i_max = p->vkCode - 0x74;
+					
+					core.recordAndPredictStupid(i_max);
+				}
+			}
+
 			break;
 		}
 	}
