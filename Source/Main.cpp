@@ -9,8 +9,12 @@
 #include <thread>
 #include <psapi.h>
 #include <array>
+#include <mutex>
 
 #include "AudioRecording.hpp"
+
+// Unsafe threading
+bool clear = false;
 
 class Core
 {
@@ -72,30 +76,31 @@ public:
 
 		std::cout << i_max << " (" << labels[i_max] << ") with val " << val_max << '\n';
 
+
 		switch (i_max)
 		{
-		//
+			//
 		case 0:
 		{
-			instruction->insert(0x44);
+			instruction->insert(0x45);
 			std::cout << "Added instruction, kanan\n";
 			break;
 		}
 		case 1:
 		{
-			instruction->insert(0x41);
+			instruction->insert(0x51);
 			std::cout << "Added instruction, kiri\n";
 			break;
 		}
 		case 2:
 		{
-			instruction->insert(0x57);
+			instruction->insert(0x4F);
 			std::cout << "Added instruction, maju\n";
 			break;
 		}
 		case 3:
 		{
-			instruction->insert(0x53);
+			instruction->insert(0x4C);
 			std::cout << "Added instruction, mundur\n";
 			break;
 		}
@@ -115,7 +120,8 @@ public:
 		}
 		case 5:
 		{
-			instruction->clear();
+			// Unsafe threading
+			clear = true;
 			std::cout << "Clearing instruction\n";
 			break;
 		}
@@ -132,6 +138,7 @@ public:
 void loop(std::set<short>* instruction)
 {
 	INPUT ip;
+	ZeroMemory(&ip, sizeof(INPUT));
 	ip.type = INPUT_KEYBOARD;
 	ip.ki.wScan = 0; // hardware scan code for key
 	ip.ki.time = 0;
@@ -147,13 +154,37 @@ void loop(std::set<short>* instruction)
 
 		if (strcmp(name, "GTA: San Andreas") == 0)
 		{
+			// Unsafe threading
+			if (clear)
+			{
+				instruction->clear();
+				clear = false;
+
+				// Release key
+				for (short key : *instruction)
+				{
+					// Press
+					ip.ki.wVk = key;
+					ip.ki.dwFlags = 0;
+					SendInput(1, &ip, sizeof(INPUT));
+
+					// Release
+					ip.ki.wVk = key;
+					ip.ki.dwFlags = KEYEVENTF_KEYUP;
+					SendInput(1, &ip, sizeof(INPUT));
+				}
+
+				ip.ki.dwFlags = 0;
+			}
+
 			for (short key : *instruction)
 			{
+				// Keypress
 				ip.ki.wVk = key;
 				SendInput(1, &ip, sizeof(INPUT));
 			}
 
-			Sleep(200);
+			Sleep(300);
 		}
 	}
 }
